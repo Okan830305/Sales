@@ -19,7 +19,7 @@ namespace Sales.Backend.Controllers
         // GET: Products
         public async Task<ActionResult> Index()
         {
-            return View(await db.Products.ToListAsync());
+            return View(await this.db.Products.OrderBy(p => p.Description).ToListAsync());
         }
 
         // GET: Products/Details/5
@@ -29,7 +29,7 @@ namespace Sales.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Products products = await db.Products.FindAsync(id);
+            Products products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return HttpNotFound();
@@ -48,12 +48,12 @@ namespace Sales.Backend.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "ProductId,Description,Price,IsAvailable,PublishOn")] Products products)
+        public async Task<ActionResult> Create(Products products)
         {
             if (ModelState.IsValid)
             {
-                db.Products.Add(products);
-                await db.SaveChangesAsync();
+                this.db.Products.Add(products);
+                await this.db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
@@ -67,7 +67,9 @@ namespace Sales.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Products products = await db.Products.FindAsync(id);
+
+            var products = await this.db.Products.FindAsync(id);
+
             if (products == null)
             {
                 return HttpNotFound();
@@ -80,12 +82,12 @@ namespace Sales.Backend.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "ProductId,Description,Price,IsAvailable,PublishOn")] Products products)
+        public async Task<ActionResult> Edit(Products products)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(products).State = EntityState.Modified;
-                await db.SaveChangesAsync();
+                this.db.Entry(products).State = EntityState.Modified;
+                await this.db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
             return View(products);
@@ -98,7 +100,7 @@ namespace Sales.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Products products = await db.Products.FindAsync(id);
+            var products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return HttpNotFound();
@@ -111,9 +113,9 @@ namespace Sales.Backend.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Products products = await db.Products.FindAsync(id);
-            db.Products.Remove(products);
-            await db.SaveChangesAsync();
+            var products = await this.db.Products.FindAsync(id);
+            this.db.Products.Remove(products);
+            await this.db.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
@@ -121,7 +123,7 @@ namespace Sales.Backend.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                this.db.Dispose();
             }
             base.Dispose(disposing);
         }

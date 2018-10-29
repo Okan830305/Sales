@@ -9,6 +9,7 @@ namespace Sales.ViewModels
     using System.Collections.Generic;
     using System.Windows.Input;
     using GalaSoft.MvvmLight.Command;
+    using Sales.Helpers;
 
     public class ProductsViewModel: BaseViewModel
     {
@@ -42,15 +43,17 @@ namespace Sales.ViewModels
 
             if (!connection.IsSuccess) {
                 this.IsRefreshing = false;
-                await Application.Current.MainPage.DisplayAlert("Error", connection.Message, "Accept");
+                await Application.Current.MainPage.DisplayAlert(Languages.Error, connection.Message, Languages.Accept);
                 return;
             }
 
             var url = Application.Current.Resources["UrlAPI"].ToString();
-            var response = await this.apiService.GetList<Products>(url, "/api", "/Products");
+            var prefix = Application.Current.Resources["UrlPrefixs"].ToString();
+            var controller = Application.Current.Resources["UrlProductsController"].ToString();
+            var response = await this.apiService.GetList<Products>(url, prefix, controller);
             if (!response.IsSuccess) {
                 this.IsRefreshing = false;
-                await Application.Current.MainPage.DisplayAlert("Error",response.Message,"Accept");
+                await Application.Current.MainPage.DisplayAlert(Languages.Error, response.Message, Languages.Accept);
                 return;
             }
 
