@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
+using Sales.API.Helpers;
 using Sales.Common.Models;
 using Sales.Domain.Models;
 
@@ -21,7 +23,7 @@ namespace Sales.API.Controllers
         // GET: api/Products
         public IQueryable<Products> GetProducts()
         {
-            return db.Products;
+            return db.Products.OrderBy(p => p.Description);
         }
 
         // GET: api/Products/5
@@ -76,9 +78,28 @@ namespace Sales.API.Controllers
         [ResponseType(typeof(Products))]
         public async Task<IHttpActionResult> PostProducts(Products products)
         {
+
+            products.IsAvailable = true;
+            products.PublishOn = DateTime.Now.ToUniversalTime();
+            
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            if (products.ImageArray != null && products.ImageArray.Length > 0)
+            {
+                var stream = new MemoryStream(products.ImageArray);
+                var guid = Guid.NewGuid().ToString();
+                var file = $"{guid}.jpg";
+                var folder = "~/Content/Products";
+                var fullPath = $"{folder}/{file}";
+                var response = FilesHelper.UploadPhoto(stream, folder, file);
+
+                if (response)
+                {
+                    products.ImagePath = fullPath;
+                }
             }
 
             db.Products.Add(products);

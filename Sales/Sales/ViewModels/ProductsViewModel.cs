@@ -13,8 +13,12 @@ namespace Sales.ViewModels
 
     public class ProductsViewModel: BaseViewModel
     {
+        #region Attribues
         private ApiService apiService;
         private bool isRefreshing;
+        #endregion
+
+        #region Propierties
         private ObservableCollection<Products> products;
 
         public bool IsRefreshing
@@ -28,20 +32,26 @@ namespace Sales.ViewModels
             get { return this.products; }
             set { this.SetValue(ref this.products, value); }
         }
+        #endregion
 
+        #region Constructor
         public ProductsViewModel()
         {
+            instance = this;
             this.apiService = new ApiService();
             this.LoadProducts();
         }
+        #endregion
 
+        #region Methods
         private async void LoadProducts()
         {
             this.IsRefreshing = true;
 
             var connection = await apiService.CheckConnection();
 
-            if (!connection.IsSuccess) {
+            if (!connection.IsSuccess)
+            {
                 this.IsRefreshing = false;
                 await Application.Current.MainPage.DisplayAlert(Languages.Error, connection.Message, Languages.Accept);
                 return;
@@ -51,7 +61,8 @@ namespace Sales.ViewModels
             var prefix = Application.Current.Resources["UrlPrefixs"].ToString();
             var controller = Application.Current.Resources["UrlProductsController"].ToString();
             var response = await this.apiService.GetList<Products>(url, prefix, controller);
-            if (!response.IsSuccess) {
+            if (!response.IsSuccess)
+            {
                 this.IsRefreshing = false;
                 await Application.Current.MainPage.DisplayAlert(Languages.Error, response.Message, Languages.Accept);
                 return;
@@ -62,7 +73,9 @@ namespace Sales.ViewModels
             this.IsRefreshing = false;
 
         }
+        #endregion
 
+        #region Commands
         public ICommand RefreshCommand
         {
             get
@@ -70,5 +83,21 @@ namespace Sales.ViewModels
                 return new RelayCommand(LoadProducts);
             }
         }
+        #endregion
+
+        #region Singleton
+        private static ProductsViewModel instance;
+
+        public static ProductsViewModel GetInstance()
+        {
+            if (instance == null)
+            {
+                return new ProductsViewModel();
+            }
+            return instance;
+        }
+        #endregion
+
+
     }
 }

@@ -9,6 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using Sales.Backend.Models;
 using Sales.Common.Models;
+using Sales.Backend.Helpers;
 
 namespace Sales.Backend.Controllers
 {
@@ -48,16 +49,41 @@ namespace Sales.Backend.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(Products products)
+        public async Task<ActionResult> Create(ProductView view)
         {
             if (ModelState.IsValid)
             {
-                this.db.Products.Add(products);
+                var pic = string.Empty;
+                var folder = "~/Content/Products";
+
+                if (view.ImageFile != null)
+                {
+                    pic = FilesHelper.UploadPhoto(view.ImageFile, folder);
+                    pic = $"{folder}/{pic}";
+                }
+
+                var product = this.ToProduct(view,pic);
+
+                this.db.Products.Add(product);
                 await this.db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
-            return View(products);
+            return View(view);
+        }
+
+        private Products ToProduct(ProductView view, string pic)
+        {
+            return new Products
+            {
+                Description = view.Description,
+                ImagePath = pic,
+                IsAvailable = view.IsAvailable,
+                Price = view.Price,
+                ProductId = view.ProductId,
+                PublishOn = view.PublishOn,
+                Remarks = view.Remarks,
+            };
         }
 
         // GET: Products/Edit/5
@@ -74,7 +100,23 @@ namespace Sales.Backend.Controllers
             {
                 return HttpNotFound();
             }
-            return View(products);
+
+            var view = this.ToView(products);
+            return View(view);
+        }
+
+        private ProductView ToView(Products products)
+        {
+            return new ProductView
+            {
+                Description =products.Description,
+                ImagePath = products.ImagePath,
+                IsAvailable =products.IsAvailable,
+                Price =products.Price,
+                ProductId =products.ProductId,
+                PublishOn =products.PublishOn,
+                Remarks =products.Remarks,
+            };
         }
 
         // POST: Products/Edit/5
@@ -82,15 +124,25 @@ namespace Sales.Backend.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(Products products)
+        public async Task<ActionResult> Edit(ProductView view)
         {
             if (ModelState.IsValid)
             {
-                this.db.Entry(products).State = EntityState.Modified;
+                var pic = view.ImagePath;
+                var folder = "~/Content/Products";
+
+                if (view.ImageFile != null)
+                {
+                    pic = FilesHelper.UploadPhoto(view.ImageFile, folder);
+                    pic = $"{folder}/{pic}";
+                }
+                var product = this.ToProduct(view, pic);
+
+                this.db.Entry(product).State = EntityState.Modified;
                 await this.db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
-            return View(products);
+            return View(view);
         }
 
         // GET: Products/Delete/5

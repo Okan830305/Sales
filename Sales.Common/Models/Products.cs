@@ -2,6 +2,8 @@
 {
     using System;
     using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
     public class Products
     {
         [Key]
@@ -26,6 +28,21 @@
         [Display(Name = "Publish On")]
         [DataType(DataType.Date)]
         public DateTime PublishOn { get; set; }
+
+        [NotMapped]
+        public byte[] ImageArray { get; set; }
+
+        public string ImageFullPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.ImagePath))
+                {
+                    return "product";
+                }
+                return $"https://salesapi20181026083120.azurewebsites.net/{this.ImagePath.Substring(1)}";
+            }
+        }
 
         public override string ToString()
         {
